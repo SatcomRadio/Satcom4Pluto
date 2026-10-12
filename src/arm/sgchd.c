@@ -535,12 +535,36 @@ static void d2_block_update(const opts_t *o) {
 }
 
 /* v2 result -> centred gains + per-bin priority (for the rate cap) */
+/* rate cap for detector v2, applied per downlink BEFORE neighbours are merged: candidates
+   (--pass ranges first, then tracks by state and SNR) are opened strongest first while they
+   fit in --max-rate. Dropping whole merged blocks instead lets one block (e.g. a --pass range
+   touching a crowd of neighbours) take the whole budget and silence everything else. */
+typedef struct { int s, e; float pr; int pass; } cand_t;
+static cand_t *d2c;
+static int d2c_cap, st_d2_capped;
+static int cmp_cand(const void *a, const void *b) {
+  float x = ((const cand_t *)a)->pr, y = ((const cand_t *)b)->pr;
+  return (x < y) - (x > y);   /* descending */
+}
 static void d2_gains(const opts_t *o, double fs, double lo) {
   filt_map(o, fs, lo);
   d2_block_update(o);
   memset(gout, 0, N);
   for (int j = 0; j < N; j++) prio[j] = -1e30f;
   st_ntracks = 0; st_nstream = 0;
+  int need = D2.ntr + o->npass + 1, nc = 0;
+  if (need > d2c_cap) { free(d2c); d2c_cap = need * 2; d2c = calloc(d2c_cap, sizeof(cand_t)); }
+  /* --pass: fixed ranges always streamed (e.g. a block of 5 kHz channels the detector cannot
+     separate); top priority under the rate cap */
+  const double binw = fs / N;
+  for (int i = 0; i < o->npass; i++) {
+    int jlo = N / 2 + (int)floor((o->plo[i] * 1e6 - lo) / binw + 0.5);
+    int jhi = N / 2 + (int)ceil((o->phi[i] * 1e6 - lo) / binw - 0.5);
+    if (jhi < 0 || jlo > N - 1) continue;
+    if (jlo < 2) jlo = 2;
+    if (jhi > N - 3) jhi = N - 3;
+    d2c[nc++] = (cand_t){ jlo, jhi, 1e4f, 1 };
+  }
   for (int i = 0; i < D2.ntr; i++) {
     det2_track_t *t = &D2.tr[i];
     st_ntracks++;
@@ -552,23 +576,28 @@ static void d2_gains(const opts_t *o, double fs, double lo) {
     float pr = (float)t->snr_db + (t->state == T_ACTIVE || t->state == T_CONF ? 100.0f : t->state == T_HOLD ? 50.0f : 0.0f);
     int s, e;
     det2_extract(&D2, t, &s, &e);
-    for (int j = s; j <= e; j++) { gout[j] = 255; if (pr > prio[j]) prio[j] = pr; }
+    if (s < 0) s = 0;
+    if (e > N - 1) e = N - 1;
+    if (e >= s) d2c[nc++] = (cand_t){ s, e, pr, 0 };
   }
-  /* --pass: fixed ranges always streamed (e.g. a block of 5 kHz channels the detector cannot
-     separate); top priority under the rate cap */
-  st_npass_bins = 0;
-  const double binw = fs / N;
-  for (int i = 0; i < o->npass; i++) {
-    int jlo = N / 2 + (int)floor((o->plo[i] * 1e6 - lo) / binw + 0.5);
-    int jhi = N / 2 + (int)ceil((o->phi[i] * 1e6 - lo) / binw - 0.5);
-    if (jhi < 0 || jlo > N - 1) continue;
-    if (jlo < 2) jlo = 2;
-    if (jhi > N - 3) jhi = N - 3;
-    for (int j = jlo; j <= jhi; j++) {
-      if (!gout[j]) st_npass_bins++;
-      gout[j] = 255;
-      prio[j] = 1e4f;
+  qsort(d2c, nc, sizeof(cand_t), cmp_cand);
+  /* output words per frame: 3 + sum(run length + 1); reserve 2 more per candidate for the
+     gap merging below, and stay under the FPGA's run limit */
+  double budget = o->max_rate * 1e6 / (fs / H) - 3;
+  double words = 0;
+  int nacc = 0;
+  st_npass_bins = 0; st_d2_capped = 0;
+  for (int c = 0; c < nc; c++) {
+    int add = 0;
+    for (int j = d2c[c].s; j <= d2c[c].e; j++) if (!gout[j]) add++;
+    if (!add) {                                   /* already open: only raise the priority */
+      for (int j = d2c[c].s; j <= d2c[c].e; j++) if (d2c[c].pr > prio[j]) prio[j] = d2c[c].pr;
+      continue;
     }
+    if (words + add + 3 > budget || nacc >= RUNS_MAX - 8) { st_d2_capped++; continue; }
+    words += add + 3; nacc++;
+    if (d2c[c].pass) st_npass_bins += add;
+    for (int j = d2c[c].s; j <= d2c[c].e; j++) { gout[j] = 255; if (d2c[c].pr > prio[j]) prio[j] = d2c[c].pr; }
   }
   /* merge gaps <= merge_gap_bins between intervals (fewer run headers) */
   int last = -1000;
@@ -641,7 +670,7 @@ static void handle_cmd(cli_t *c, char *line) {
                "windows=%d capped=%d meas_fs=%.0f det=%s kernel=%s tracks=%d streaming=%d blocked=%d pass_bins=%d det_ms=%.1f\n",
                st_fs, st_lo, N, st_fs / N, st_update_s, st_updates, st_nruns, st_nbins, st_rate,
                st_osh, st_psh, st_avg, (rd(R_CTRL) >> 1) & 1, rd(R_FRAMES), rd(R_DROPS), rd(R_SAT),
-               rd(R_WORDS), rd(R_INOVF), nwins, st_dropped_windows,
+               rd(R_WORDS), rd(R_INOVF), nwins, st_dropped_windows + (use_det2(&cur) ? st_d2_capped : 0),
                rd(R_RATE) * core_hz / 16777216.0, use_det2(&cur) ? "v2" : "v15",
                d2_kern == 2 ? "sin1" : d2_kern == 1 ? "sin3" : "sin5", st_ntracks, st_nstream, st_nblocked, st_npass_bins, st_proc_ms);
   } else if (!strcasecmp(av[0], "CHANNELS")) {

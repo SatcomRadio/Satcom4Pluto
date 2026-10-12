@@ -413,7 +413,8 @@ Per update, i.e. one FPGA spectrum of 2^AVG frames (28–114 ms):
    - Each streaming track gets an extraction interval: bandwidth × 1.25 plus a 4.5 kHz guard
      band on each side (at least 12.5 kHz for narrow signals).
    - Then `--pass` ranges are added and `--max-snr-db` blocks are cleared.
-   - The result is limited to `--max-rate`, dropping the weakest first.
+   - The result is limited to `--max-rate`: `--pass` ranges first, then the downlinks from the
+     strongest down, each counted on its own before neighbours are merged, until the budget is full.
    - The gains and runs are written to the FPGA.
 
 `sgchd` also controls the AD9363 RX interface delay (register 0x006 = 0x06, centred in the
