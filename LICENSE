@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 Satcom Radio
+Copyright (c) 2026 Gabriel Vazquez
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,14 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---------------------------------------------------------------------------
+Third-party parts (not covered by the MIT license above):
+
+* src/fpga/vivado/system_bd.tcl, system_project.tcl, system_top.v,
+  system_constr.xdc: derived from the Analog Devices HDL repository
+  (https://github.com/analogdevicesinc/hdl, projects/pluto); its license
+  terms apply. The FPGA bitstream (deploy/*/sgch_pl.bin) contains Analog
+  Devices IP cores.
+* src/pc/pocketfft_hdronly.h: pocketfft, BSD-3-Clause, see
+  src/pc/POCKETFFT_LICENSE.md.

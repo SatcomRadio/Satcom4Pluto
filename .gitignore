@@ -1,0 +1,27 @@
+# build outputs
+src/arm/sgchd
+src/arm/det2_test
+src/pc/build/
+*.o
+*.obj
+# Vivado
+*.jou
+*.log
+.Xil/
+*.runs/
+*.cache/
+*.hw/
+*.ip_user_files/
+*.sim/
+*.gen/
+*.srcs/
+*.xpr
+# Python
+__pycache__/
+*.pyc
+*.npy
+# simulation outputs
+src/fpga/sim/*.vcd
+src/fpga/sim/vectors/
+# Visual Studio
+.vs/

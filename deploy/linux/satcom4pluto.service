@@ -1,0 +1,13 @@
+[Unit]
+Description=satcom4pluto: load the Pluto (FPGA image + detector into RAM) after every Pluto power-up
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+EnvironmentFile=/etc/satcom4pluto.conf
+ExecStart=/usr/local/share/satcom4pluto/satcom4pluto.sh
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

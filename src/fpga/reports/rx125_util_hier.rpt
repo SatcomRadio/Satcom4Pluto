@@ -1,0 +1,50 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2026 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2026.1 (win64) Build 6511674 Tue Jun 16 11:02:23 MDT 2026
+| Date         : Sun Oct 11 22:48:03 2026
+| Host         : GABRIEL-PC running 64-bit major release  (build 9200)
+| Command      : report_utilization -hierarchical -hierarchical_depth 4 -file C:/sgcb/v11_reports/util_hier.rpt
+| Design       : system_top
+| Device       : xc7z010clg400-1
+| Speed File   : -1
+| Design State : Routed
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++----------------------------+----------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
+|          Instance          |                 Module                 | Total LUTs | Logic LUTs | LUTRAMs | SRLs |  FFs  | RAMB36 | RAMB18 | DSP Blocks |
++----------------------------+----------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
+| system_top                 |                                  (top) |      11125 |       9542 |     884 |  699 | 13367 |     40 |      5 |         73 |
+|   (system_top)             |                                  (top) |          0 |          0 |       0 |    0 |     0 |      0 |      0 |          0 |
+|   i_system_wrapper         |                         system_wrapper |      11125 |       9542 |     884 |  699 | 13367 |     40 |      5 |         73 |
+|     system_i               |                                 system |      11125 |       9542 |     884 |  699 | 13367 |     40 |      5 |         73 |
+|       tx_upack             |                      system_tx_upack_0 |         90 |         90 |       0 |    0 |   103 |      0 |      0 |          0 |
+|         inst               |          system_tx_upack_0_util_upack2 |         90 |         90 |       0 |    0 |   103 |      0 |      0 |          0 |
+|       axi_ad9361           |                    system_axi_ad9361_0 |       2628 |       2595 |       0 |   33 |  5381 |      0 |      0 |         12 |
+|         inst               |         system_axi_ad9361_0_axi_ad9361 |       2628 |       2595 |       0 |   33 |  5381 |      0 |      0 |         12 |
+|       axi_ad9361_adc_dma   |            system_axi_ad9361_adc_dma_0 |        426 |        394 |      32 |    0 |   665 |      1 |      0 |          0 |
+|         inst               |   system_axi_ad9361_adc_dma_0_axi_dmac |        426 |        394 |      32 |    0 |   665 |      1 |      0 |          0 |
+|       axi_ad9361_dac_dma   |            system_axi_ad9361_dac_dma_0 |        416 |        388 |      28 |    0 |   568 |      1 |      0 |          0 |
+|         inst               |   system_axi_ad9361_dac_dma_0_axi_dmac |        416 |        388 |      28 |    0 |   568 |      1 |      0 |          0 |
+|       axi_gp0_interconnect |          system_axi_gp0_interconnect_0 |        623 |        562 |       0 |   61 |   681 |      0 |      0 |          0 |
+|         s00_couplers       |               s00_couplers_imp_1HZ6LU5 |        406 |        345 |       0 |   61 |   550 |      0 |      0 |          0 |
+|         xbar               | system_axi_gp0_interconnect_imp_xbar_0 |        217 |        217 |       0 |    0 |   131 |      0 |      0 |          0 |
+|       cpack                |                         system_cpack_0 |        108 |        108 |       0 |    0 |   130 |      0 |      0 |          0 |
+|         inst               |             system_cpack_0_util_cpack2 |        108 |        108 |       0 |    0 |   130 |      0 |      0 |          0 |
+|       rx_fir_decimator     |           rx_fir_decimator_imp_1GA06XC |        617 |        185 |      24 |  408 |  1291 |      0 |      0 |         22 |
+|         fir_decimation_0   |              system_fir_decimation_0_0 |        300 |         84 |      12 |  204 |   645 |      0 |      0 |         11 |
+|         fir_decimation_1   |              system_fir_decimation_1_0 |        300 |         84 |      12 |  204 |   644 |      0 |      0 |         11 |
+|       sgc                  |                           system_sgc_0 |       6184 |       5188 |     800 |  196 |  4515 |     38 |      5 |         39 |
+|         inst               |                   system_sgc_0_sgc_top |       6184 |       5188 |     800 |  196 |  4515 |     38 |      5 |         39 |
++----------------------------+----------------------------------------+------------+------------+---------+------+-------+--------+--------+------------+
+* Note: The sum of lower-level cells may be larger than their parent cells total, due to cross-hierarchy LUT combining
+
+
